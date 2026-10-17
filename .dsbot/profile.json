@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "project": "dsbot-plan-copy",
+  "repo_path": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+  "stack": ["node24", "esbuild", "dsh-plugin"],
+  "commands": {
+    "install": "npm --prefix ds-bot ci",
+    "test": "npm --prefix ds-bot test",
+    "test_acceptance": "node --test \"ds-bot/test/acceptance/*.test.js\"",
+    "lint": "npm --prefix ds-bot run lint",
+    "build": "npm --prefix ds-bot run build"
+  },
+  "acceptance_path": "ds-bot/test/acceptance/",
+  "protected_paths": [
+    "ds-bot/test/acceptance/",
+    ".dsbot/gate/",
+    ".dsbot/schemas/",
+    ".dsbot/tools/",
+    "dsbot-pack/",
+    "hooks/",
+    ".github/",
+    "CHANGELOG.md",
+    "app/"
+  ],
+  "base_branch": "dsbot/plan-copy-base",
+  "branch_prefix": "feat/",
+  "definition_of_done": [
+    "npm test passes",
+    "node scripts/build-client.mjs --check passes",
+    "npm run lint passes",
+    "client.js regenerated with npm run build and committed with the source",
+    "no CHANGELOG.md edit, no version bump",
+    "no secrets in the diff"
+  ],
+  "notes": "Part 2 of the plan: a Copy button in the plan preview. Worktree on feat/plan-copy; the base branch dsbot/plan-copy-base carries the frozen acceptance tests and the spec, so the protected acceptance path is outside the build range."
+}

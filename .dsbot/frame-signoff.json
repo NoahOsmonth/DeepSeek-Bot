@@ -1,0 +1,39 @@
+{
+  "project": "ds-bot plan preview copy button",
+  "date": "2026-10-17",
+  "signed_by": "sigmu",
+  "decisions": [
+    {
+      "id": "D1",
+      "status": "CHOSEN",
+      "value": "Review preview copies the revision currently rendered in the panel, not the live plan."
+    },
+    {
+      "id": "D2",
+      "status": "CHOSEN",
+      "value": "Expired preview keeps the copy control visible and active; it copies what is displayed and the existing expiry line carries the warning."
+    },
+    {
+      "id": "D3",
+      "status": "CHOSEN",
+      "value": "No title, no heading, no front matter: source text only."
+    },
+    {
+      "id": "D4",
+      "status": "CHOSEN",
+      "value": "Text selection inside the plan is ignored; the whole plan is always copied."
+    },
+    {
+      "id": "D5",
+      "status": "DEFAULTED",
+      "value": "Each click inside the 1.2 s window writes again and restarts the confirmation window."
+    }
+  ],
+  "checklist": {
+    "all_answerable": true,
+    "defaults_ok": true,
+    "no_product_smell": true,
+    "nothing_missing": true
+  },
+  "notes": "D1, D3, D4 were fixed by the user's own plan; D2 was put to the user because the plan said no button on expired while the frame defaulted to keeping it — the user chose to keep it; D5 stands on its default."
+}

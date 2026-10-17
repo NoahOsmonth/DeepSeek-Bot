@@ -1,0 +1,154 @@
+{
+  "role": "architect",
+  "project": "dsbot-plan-copy",
+  "version": 1,
+  "run": "2026-10-17",
+  "commit": "b6577f6",
+  "goal": "Add a Copy control to the plan preview that writes the displayed plan's source text verbatim to the clipboard and never claims a copy that did not happen, inside the Bot-mode surface only.",
+  "non_goals": [
+    "Changing or restyling DSH's builtin plan viewer.",
+    "New settings, preferences or toggles.",
+    "New dependencies, new colors, new motion curves.",
+    "Other document kinds, and any mode other than bot mode.",
+    "Copy as link or shareable reference, and selection-scoped copy as a second affordance.",
+    "A CHANGELOG edit or a version bump."
+  ],
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "installPlanView registers one tab type with id ds-bot/plan and kind plan at the extension band, claiming the dsh-resource plan and plan-review globs, plus the sidebar.right.pane.tab and sidebar.right.pane.tab.title seats keyed by ds-bot/plan. It returns one disposer that unregisters all three, after which the builtin plan type is in force again. The id/kind/seat keying is the documented contract at dsh-client-ui-sidebar-right/lib/types/client/tab-registry.d.ts:74-120 and README.md:83.",
+      "acceptance": "the plan tab type, body and title register under ds-bot/plan and its disposer unregisters all three",
+      "from": ["C1", "A1", "A4", "K5"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R1 registers and disposes the plan tab type, body and title"]
+    },
+    {
+      "id": "R2",
+      "text": "Mode scoping is structural, not a check. groupsFor returns shell true only when the mode is bot (src/client/surface.js:7-9), and surfaceGroups.reconcile withdraws a group whose wanted flag is false and disposes every step in it (src/client/surface.js:29-55). installShell is a list of steps, each returning a disposer (src/client/index.js:631-656), and reconcile runs on every surface change (:757-760), so a runtime Bot to Agent switch withdraws the group while the plugin stays installed. installPlanView is therefore one step in installShell's list: it returns the disposer that unregisters the tab type, body and title, and surfaceGroups withdraws it when the mode leaves bot, so DSH's builtin plan viewer is in force again. No mode argument is passed and there is no install-time mode check. A runtime without the sidebarRightTabs service still registers nothing and throws nothing. The registration itself is static (tab-registry.d.ts:74-120), which is why the scope cannot live in it (scout-prior-art.md:26-34).",
+      "acceptance": "the plan view registers with the shell group and its tab type is withdrawn with the group",
+      "from": ["C1", "K2"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R2 registers the plan view with the shell group and withdraws it with the group"]
+    },
+    {
+      "id": "R3",
+      "text": "planView(tab, resource) reports state review for an address matching the same plan-review shape DSH uses (dsh-client-ui-plan/lib/client.js:151-153), with document {markdown, title} taken from tab.navigation.params.planReview (review-preview.d.ts:4-11, client.js:683-686); a plan-review address whose navigation carries no planReview is state expired, and the copy control stays visible and enabled in that state (D2).",
+      "acceptance": "a review preview reads markdown from tab navigation params and a review without it is expired",
+      "from": ["C2", "D1", "D2", "K3"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R3 reads review previews and reports an expired one"]
+    },
+    {
+      "id": "R4",
+      "text": "planView reports state live when the resource is live and document = resource.value, the SubmittedPlan {callId, markdown, title} the provider returns (plan.d.ts:10-12, plan-resource.d.ts:17-22), read through useResource as DSH's own body does (client.js:178-180); state failed when the read failed, carrying resource.failure; state unavailable when resource.status is none; state loading while the read is still pending.",
+      "acceptance": "a live plan reads the resource value and failed, unavailable and loading follow its status",
+      "from": ["C2", "A2"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R4 maps the live, failed, unavailable and loading states"]
+    },
+    {
+      "id": "R5",
+      "text": "The copy control writes document.markdown to navigator.clipboard.writeText unchanged, with no trim, no re-serialization and no added heading or front matter (D3), and it always writes the whole document, ignoring any selection inside the body (D4). The text written is the navigation-param markdown for a review and the resource value markdown for a live plan (D1).",
+      "acceptance": "clicking copy writes the whole plan markdown verbatim to the clipboard, ignoring any selection",
+      "from": ["C2", "C3", "D3", "D4"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R5 copies the whole plan markdown verbatim"]
+    },
+    {
+      "id": "R6",
+      "text": "A resolved clipboard write shows Copied for 1200 ms and then returns to Copy; the Copied state is exposed in a live region so it is announced and not only drawn (WCAG 2.2 AA status message); a click inside the window writes again and restarts the 1200 ms window (D5); unmount clears the pending timer so no state update lands on a gone view.",
+      "acceptance": "a successful copy announces Copied for 1.2 seconds, a repeat click restarts it and unmount clears it",
+      "from": ["C4", "D5", "K4"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R6 announces Copied for 1.2 seconds and clears the timer on unmount"]
+    },
+    {
+      "id": "R7",
+      "text": "A rejected clipboard write, a missing navigator.clipboard, or a click with no plan text (an expired review) writes nothing, shows the Could not copy the plan. failure text for 2000 ms and never shows Copied. The rejection is observable: the existing client helper already maps a rejected writeText to false (ds-bot/src/client/feedback.js:24-26), so the control must not treat an attempt as success.",
+      "acceptance": "a rejected or missing copy shows the failure text for 2 seconds and never shows Copied",
+      "from": ["C3", "C5", "A3", "K1", "D2"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R7 shows the failure text and never Copied when the copy fails"]
+    },
+    {
+      "id": "R8",
+      "text": "When there is no plan text the body shows one state line from the new strings: loading, unavailable or expired; a failed read shows the resource failure message, which is DSH's own failure.message (client.js:162-168 and :196-200) rather than a new wording. The state line and the failure message are the body content in those states, not a blank body.",
+      "acceptance": "without plan text the body shows its state line and a failed read shows the failure message",
+      "from": ["C5", "C6"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R8 shows state lines and the resource failure message"]
+    },
+    {
+      "id": "R9",
+      "text": "PlanTabTitle shows the plan title when there is one, else the tab's captured title, else the new Plan string: the same fallback DSH uses at client.js:219-229, with the extra Plan string for a chip that has neither title.",
+      "acceptance": "the tab chip shows the plan title, else the title captured at open, else Plan",
+      "from": ["C1"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R9 falls back from the plan title to the captured title and Plan"]
+    },
+    {
+      "id": "R10",
+      "text": "PLAN_CSS styles the bar, the document and the copy control with only the existing --bt-card, --bt-line, --bt-ink-2 and --bt-hover tokens (ds-bot/src/client/styles.js:21-22), the existing 8px radius step (scripts/style-debt.mjs RADII), and no literal color, no new radius and no new motion; the document is the only scroller and the bar never scrolls.",
+      "acceptance": "the plan styles use only --bt tokens, the 8px radius step and no literal colors or springs",
+      "from": ["C6", "A5"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R10 keeps plan styles on existing tokens and the 8px radius"]
+    },
+    {
+      "id": "R11",
+      "text": "i18n.js gains Chinese entries for Plan, Copy plan as Markdown, Loading the plan\u2026, This plan is not available., The plan could not be loaded., This plan preview has expired. and Could not copy the plan.; Copy, Copied and Footnotes are reused rather than duplicated. Every t('...') literal added under src/client has an entry, which test/i18n.test.js:18-29 enforces.",
+      "acceptance": "every new plan view string has a Chinese entry and Copy, Copied and Footnotes are reused",
+      "from": ["C6"],
+      "status": "active",
+      "tests": ["ds-bot/test/acceptance/plan-view.test.js::R11 adds the plan view strings to the Chinese dictionary"]
+    }
+  ],
+  "file_ownership": {
+    "R1": ["ds-bot/src/client/plan-view.js"],
+    "R2": ["ds-bot/src/client/plan-view.js", "ds-bot/src/client/index.js", "ds-bot/client.js"],
+    "R3": ["ds-bot/src/client/plan-view.js"],
+    "R4": ["ds-bot/src/client/plan-view.js"],
+    "R5": ["ds-bot/src/client/plan-view.js"],
+    "R6": ["ds-bot/src/client/plan-view.js"],
+    "R7": ["ds-bot/src/client/plan-view.js"],
+    "R8": ["ds-bot/src/client/plan-view.js"],
+    "R9": ["ds-bot/src/client/plan-view.js"],
+    "R10": ["ds-bot/src/client/plan-view.js"],
+    "R11": ["ds-bot/src/client/i18n.js"]
+  },
+  "risks": [
+    { "id": "K1", "resolves_to": "R7" },
+    { "id": "K2", "resolves_to": "R2" },
+    { "id": "K3", "resolves_to": "R3" },
+    { "id": "K4", "resolves_to": "R6" },
+    { "id": "K5", "resolves_to": "R1" }
+  ],
+  "assumptions": [
+    {
+      "id": "A1",
+      "verdict": "verified",
+      "evidence": "Published prior art: dsh-better-sidebar v0.19.1 re-registers the builtin files kind with its own id at priority extension and no patterns, and the builtin resumes when it unregisters (.dsbot/reports/scout-prior-art.md:12-14, 24, 50; retrieved 2026-10-17). Local contract: one builtin and one extension per kind, extension in force, body and title keyed by the definition id (dsh-client-ui-sidebar-right/lib/types/client/tab-registry.d.ts:18-22, 74-83, 156-164) and README.md:83; the builtin plan type registers at dsh-client-ui-plan/lib/client.js:630-637 with priority builtin."
+    },
+    {
+      "id": "A2",
+      "verdict": "verified",
+      "evidence": "The plan protocol's value is the plan text: SubmittedPlan { markdown, title, callId } extends PlanDocument { markdown, title } (dsh-client-ui-plan/lib/types/client/plan.d.ts:5-12) and ResourceProtocolMap.plan = SubmittedPlan (plan-resource.d.ts:17-22). DSH's own body reads it as useResource(tab.navigation.address).value (client.js:178-183), so resource.value.markdown is already the verbatim text with no second read or re-serialization; review previews carry the same shape in navigation params.planReview (review-preview.d.ts:4-11, client.js:683-686)."
+    },
+    {
+      "id": "A3",
+      "verdict": "verified",
+      "evidence": "ds-bot/src/client/feedback.js:24-26 already treats the writeText rejection as an explicit false (and a missing navigator.clipboard as false too); cells.js:98 and details-drawer.js:182 consume the same promise. The rejection path is therefore observable in this runtime, not silent."
+    },
+    {
+      "id": "A4",
+      "verdict": "verified",
+      "evidence": "dsh-client-ui-sidebar-right/lib/types/client/tab-registry.d.ts:18-22, 156-164: an extension may take over a builtin's kind and the builtin resumes when it unregisters; leave() at :167-168 is the shadowed builtin resuming, and register() returns an idempotent disposer (:161-164). README.md:83 states the same contract."
+    },
+    {
+      "id": "A5",
+      "verdict": "verified",
+      "evidence": "ds-bot/src/client/styles.js:21-22 defines --bt-card, --bt-line, --bt-ink-2 and --bt-hover for both themes; scripts/style-debt.mjs RADII lists the 8px step and test/style-debt.test.js:28-38 enforces colors, radii and springs, so every state of the control maps to an existing token."
+    }
+  ],
+  "accepted_risks": []
+}
