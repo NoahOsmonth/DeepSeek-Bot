@@ -901,7 +901,15 @@ var ZH = {
   "Use this folder": "使用这个文件夹",
   "Up one level": "上一级",
   "No folders inside.": "里面没有文件夹。",
-  "Some folders are not shown.": "还有一些文件夹没有显示。"
+  "Some folders are not shown.": "还有一些文件夹没有显示。",
+  // Plan preview
+  Plan: "计划",
+  "Copy plan as Markdown": "以 Markdown 复制计划",
+  "Loading the plan…": "正在加载计划…",
+  "This plan is not available.": "此计划不可用。",
+  "The plan could not be loaded.": "无法加载计划。",
+  "This plan preview has expired.": "此计划预览已过期。",
+  "Could not copy the plan.": "无法复制计划。"
 };
 var HOST_ERRORS = [
   [/^Model (.+) is not available\. Available: (.*)$/, "模型 $1 不可用。可用的：$2"],
@@ -1222,8 +1230,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h36, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h36 / 2}" width="${w}" height="${h36}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h36, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h36 * 0.14}Q0 ${-h36 * 0.42} ${w * 0.62} ${h36 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h37, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h37 / 2}" width="${w}" height="${h37}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h37, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h37 * 0.14}Q0 ${-h37 * 0.42} ${w * 0.62} ${h37 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1863,12 +1871,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h36 = dt / steps;
+    const h37 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h36;
-        value.x += value.v * h36;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h37;
+        value.x += value.v * h37;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -13769,6 +13777,138 @@ var USER_MESSAGE_CSS = `
 .bt-umsg:hover .bt-utools,.bt-umsg:focus-within .bt-utools{opacity:1;visibility:visible}
 `;
 
+// src/client/plan-view.js
+var import_react37 = require("react");
+var PLAN_ID = "ds-bot/plan";
+var PLAN_KIND = "plan";
+var PATTERNS = ["dsh-resource://plan/**", "dsh-resource://plan-review/**"];
+var REVIEW_ADDRESS = /^dsh-resource:\/\/plan-review\/[^/?#]+\/[^/?#]+$/;
+var COPIED_MS = 1200;
+var FAILED_MS = 2e3;
+var isReviewPreview = (address) => typeof address === "string" && REVIEW_ADDRESS.test(address);
+function planView(tab, resource) {
+  const navigation = tab?.navigation;
+  if (isReviewPreview(navigation?.address)) {
+    const review = navigation.params?.planReview;
+    if (review === void 0 || review === null) return { state: "expired" };
+    return { state: "review", document: review };
+  }
+  switch (resource?.status) {
+    case "live":
+      return { state: "live", document: resource.value };
+    case "failed":
+      return { state: "failed", failure: resource.failure };
+    case "none":
+      return { state: "unavailable" };
+    default:
+      return { state: "loading" };
+  }
+}
+var stateLine = (view) => view.state === "loading" ? t("Loading the plan…") : view.state === "unavailable" ? t("This plan is not available.") : view.state === "expired" ? t("This plan preview has expired.") : t("The plan could not be loaded.");
+var writeClipboard = (text) => {
+  const clipboard = typeof navigator === "undefined" ? void 0 : navigator.clipboard;
+  if (clipboard === void 0) return Promise.resolve(false);
+  return clipboard.writeText(text).then(() => true, () => false);
+};
+var markdownLabels = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
+function PlanBody({ useTabInfo, useResource }) {
+  const info = useTabInfo();
+  const tab = info.tab;
+  const resource = useResource(tab.navigation.address);
+  const view = planView(tab, resource);
+  const [status, setStatus] = (0, import_react37.useState)(null);
+  const timer = (0, import_react37.useRef)(null);
+  const stop = () => {
+    if (timer.current !== null) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+  };
+  (0, import_react37.useEffect)(() => stop, []);
+  const announce = (next, delay) => {
+    stop();
+    setStatus(next);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      setStatus(null);
+    }, delay);
+  };
+  const copy2 = () => {
+    const markdown = view.document?.markdown;
+    if (typeof markdown !== "string" || markdown === "") {
+      announce("failed", FAILED_MS);
+      return void 0;
+    }
+    return writeClipboard(markdown).then((written) => {
+      announce(written ? "copied" : "failed", written ? COPIED_MS : FAILED_MS);
+    });
+  };
+  return (0, import_react37.createElement)(
+    "section",
+    { className: "bt-plan" },
+    (0, import_react37.createElement)(
+      "div",
+      { className: "bt-plan-bar" },
+      (0, import_react37.createElement)("button", {
+        type: "button",
+        className: "bt-plan-copy",
+        title: t("Copy plan as Markdown"),
+        onClick: copy2
+      }, (0, import_react37.createElement)("span", { "aria-live": "polite" }, status === "copied" ? t("Copied") : t("Copy")))
+    ),
+    status === "failed" ? (0, import_react37.createElement)("p", { className: "bt-plan-note", role: "status" }, t("Could not copy the plan.")) : null,
+    view.document === void 0 ? (0, import_react37.createElement)(
+      "div",
+      { className: "bt-plan-state", role: "status" },
+      stateLine(view),
+      view.state === "failed" ? (0, import_react37.createElement)("p", null, view.failure?.message) : null
+    ) : (0, import_react37.createElement)("div", { className: "bt-plan-doc" }, (0, import_react37.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: view.document.markdown, labels: markdownLabels() }))
+  );
+}
+function PlanTabTitle({ useTabInfo, useResource }) {
+  const info = useTabInfo();
+  const tab = info.tab;
+  const resource = useResource(tab.navigation.address);
+  const view = planView(tab, resource);
+  return view.document?.title ?? tab.title ?? t("Plan");
+}
+function installPlanView(ctx) {
+  const fiber = ctx.inject(["slots", "sidebarRightTabs"], (scope) => {
+    const offType = scope.sidebarRightTabs.register({
+      id: PLAN_ID,
+      kind: PLAN_KIND,
+      priority: "extension",
+      patterns: PATTERNS,
+      title: () => t("Plan")
+    });
+    const offBody = scope.slots.inject("sidebar.right.pane.tab", () => scope.slots.register({
+      name: "sidebar.right.pane.tab",
+      key: PLAN_ID
+    }, PlanBody));
+    const offTitle = scope.slots.inject("sidebar.right.pane.tab.title", () => scope.slots.register({
+      name: "sidebar.right.pane.tab.title",
+      key: PLAN_ID
+    }, PlanTabTitle));
+    return () => {
+      offTitle?.();
+      offBody?.();
+      offType?.();
+    };
+  });
+  return () => fiber?.dispose?.();
+}
+var PLAN_CSS = `
+.bt-plan{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--bt-card)}
+.bt-plan-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none;padding:6px 12px;border-bottom:1px solid var(--bt-line)}
+.bt-plan-copy{font:inherit;color:var(--bt-ink-2);background:transparent;border:1px solid var(--bt-line);border-radius:8px;padding:3px 10px;cursor:pointer}
+.bt-plan-copy:hover{color:var(--bt-ink-2);background:var(--bt-hover)}
+.bt-plan-copy:focus-visible{outline:2px solid var(--bt-line);outline-offset:1px}
+.bt-plan-note{margin:0;padding:6px 12px;color:var(--bt-ink-2);border-bottom:1px solid var(--bt-line)}
+.bt-plan-doc{flex:1;min-height:0;overflow:auto;padding:12px 16px}
+.bt-plan-state{display:flex;flex-direction:column;gap:6px;padding:16px;color:var(--bt-ink-2)}
+.bt-plan-state p{margin:0}
+`;
+
 // src/client/approval-notices.js
 function noticeApprovals({ work, roster, shownSession, openSession, since: since2 = Date.now() }) {
   const told = /* @__PURE__ */ new Set();
@@ -14400,6 +14540,10 @@ function apply(ctx) {
     () => installCompiledStyles(ABOUT_CSS, "about"),
     () => installCompiledStyles(MEMBER_CSS, "members"),
     () => installCompiledStyles(USER_MESSAGE_CSS, "user-messages"),
+    () => installCompiledStyles(PLAN_CSS, "plan"),
+    // A shell step, not an install-time check: withdrawing the shell group unregisters
+    // the tab type, so leaving Bot mode hands the plan kind back to DSH's builtin viewer.
+    () => installPlanView(ctx),
     browsers ? () => installCompiledStyles(BROWSER_CSS, "browser") : null,
     () => installTheme(),
     () => shadow("sidebar.workspaces", { priority: BOT_PRIORITY, inject: face }, TeamSidebar),
