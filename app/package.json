@@ -1,7 +1,7 @@
 {
   "name": "deepseek-bot",
   "productName": "DeepSeek Bot",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "DeepSeek Bot desktop app: the ds-bot team on its own pinned DeepSeek Harness.",
   "license": "Apache-2.0",
