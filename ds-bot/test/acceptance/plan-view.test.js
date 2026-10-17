@@ -284,7 +284,7 @@ const none = () => ({ status: 'none' })
 const loading = () => ({ status: 'loading' })
 const failed = () => ({ status: 'failed', value: undefined, failure: { code: 'plan/read-failed', message: 'the plan history is gone' } })
 
-const copyControl = tree => find(tree, node => typeof node.props?.onClick === 'function' && text(node).trim() === 'Copy')
+const copyControl = tree => find(tree, node => typeof node.props?.onClick === 'function' && ['Copy', 'Copied'].includes(text(node).trim()))
 const click = async (view) => {
   const control = copyControl(view.runtime.tree())
   assert.ok(control, 'the plan view draws no Copy control')
