@@ -1,8 +1,8 @@
 {
   "role": "tester",
   "project": "dsbot-plan-copy",
-  "run": "2026-10-17T11:39:40.365Z",
-  "commit": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+  "run": "2026-10-17T11:55:02.987Z",
+  "commit": "c94299a10f839af9c342fbda86792247b83124b4",
   "command": {
     "cmd": "node --test \"ds-bot/test/acceptance/*.test.js\"",
     "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
@@ -34,7 +34,7 @@
     {
       "requirement": "R1",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R1 registers and disposes the plan tab type, body and title",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -43,7 +43,7 @@
     {
       "requirement": "R2",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R2 registers the plan view with the shell group and withdraws it with the group",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -52,7 +52,7 @@
     {
       "requirement": "R3",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R3 reads review previews and reports an expired one",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -61,7 +61,7 @@
     {
       "requirement": "R4",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R4 maps the live, failed, unavailable and loading states",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -70,7 +70,7 @@
     {
       "requirement": "R5",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R5 copies the whole plan markdown verbatim",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -79,7 +79,7 @@
     {
       "requirement": "R6",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R6 announces Copied for 1.2 seconds and clears the timer on unmount",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -88,7 +88,7 @@
     {
       "requirement": "R7",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R7 shows the failure text and never Copied when the copy fails",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -97,7 +97,7 @@
     {
       "requirement": "R8",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R8 shows state lines and the resource failure message",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -106,7 +106,7 @@
     {
       "requirement": "R9",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R9 falls back from the plan title to the captured title and Plan",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -115,7 +115,7 @@
     {
       "requirement": "R10",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R10 keeps plan styles on existing tokens and the 8px radius",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
@@ -124,7 +124,7 @@
     {
       "requirement": "R11",
       "test": "ds-bot/test/acceptance/plan-view.test.js::R11 adds the plan view strings to the Chinese dictionary",
-      "frozen_at": "d9ba76b3021ca91c6c19454edfe85916a2e60473",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
       "spec_version": 1,
       "at_freeze": "fail",
       "failure_kind": "assertion",
