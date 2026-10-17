@@ -3033,6 +3033,29 @@ function installStyles(text, tag) {
 }
 var FRAGMENT_SELECTOR = /\[class\*="(_[\w-]+)"\]/g;
 var CLASS_TOKEN = /\.((?:\\.|[\w-])+)/g;
+var shellClasses = null;
+var shellGeneration = 0;
+var sheetClassCache = /* @__PURE__ */ new WeakMap();
+var fragmentCache = /* @__PURE__ */ new Map();
+function invalidateShellClasses() {
+  shellGeneration += 1;
+}
+function collectShellClassNames() {
+  if (shellClasses && shellClasses.generation === shellGeneration) return shellClasses.names;
+  const names = /* @__PURE__ */ new Set();
+  for (const sheet of document.styleSheets) {
+    if (sheet.ownerNode?.dataset?.dshBot) continue;
+    let list = sheetClassCache.get(sheet);
+    if (!list) {
+      list = sheetClassNames(sheet);
+      sheetClassCache.set(sheet, list);
+    }
+    for (const name of list) names.add(name);
+  }
+  shellClasses = { generation: shellGeneration, names };
+  fragmentCache.clear();
+  return names;
+}
 function sheetClassNames(sheet) {
   const names = [];
   const visit = (rules) => {
@@ -3048,31 +3071,21 @@ function sheetClassNames(sheet) {
   return names;
 }
 function compileFragmentSelectors(text, names) {
-  const compiled = /* @__PURE__ */ new Map();
   return text.replace(FRAGMENT_SELECTOR, (whole, fragment) => {
-    if (!compiled.has(fragment)) {
+    let replacement = fragmentCache.get(fragment);
+    if (replacement === void 0) {
       const exact = [];
       for (const name of names) if (name.includes(fragment)) exact.push(`.${name}`);
-      compiled.set(fragment, exact.length ? `:is(${exact.join(",")})` : whole);
+      replacement = exact.length ? `:is(${exact.join(",")})` : whole;
+      fragmentCache.set(fragment, replacement);
     }
-    return compiled.get(fragment);
+    return replacement;
   });
 }
 function installCompiledStyles(text, tag) {
   const style = installStyles("", tag);
-  const cache = /* @__PURE__ */ new WeakMap();
   const render = () => {
-    const names = /* @__PURE__ */ new Set();
-    for (const sheet of document.styleSheets) {
-      if (sheet.ownerNode?.dataset?.dshBot) continue;
-      let list = cache.get(sheet);
-      if (!list) {
-        list = sheetClassNames(sheet);
-        cache.set(sheet, list);
-      }
-      for (const name of list) names.add(name);
-    }
-    const next = compileFragmentSelectors(text, names);
+    const next = compileFragmentSelectors(text, collectShellClassNames());
     if (style.textContent !== next) style.textContent = next;
   };
   render();
@@ -3082,11 +3095,16 @@ function installCompiledStyles(text, tag) {
     timer = setTimeout(render, 120);
   };
   const onLoad = (event) => {
-    if (event.target instanceof HTMLLinkElement) schedule();
+    if (event.target instanceof HTMLLinkElement) {
+      invalidateShellClasses();
+      schedule();
+    }
   };
   const shell = (node) => node.dataset?.dshBot === void 0;
   const observer = new MutationObserver((records) => {
-    if (records.some((record) => [...record.addedNodes, ...record.removedNodes].some(shell))) schedule();
+    if (!records.some((record) => [...record.addedNodes, ...record.removedNodes].some(shell))) return;
+    invalidateShellClasses();
+    schedule();
   });
   observer.observe(document.head, { childList: true });
   document.addEventListener("load", onLoad, true);

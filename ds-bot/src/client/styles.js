@@ -1022,6 +1022,30 @@ export function installStyles(text, tag) {
 const FRAGMENT_SELECTOR = /\[class\*="(_[\w-]+)"\]/g
 const CLASS_TOKEN = /\.((?:\\.|[\w-])+)/g
 
+// A dozen sheets compile against the same class names, so the index of the
+// shell's classes and the fragment rewrites are shared rather than rebuilt per
+// sheet. Both are dropped when the shell adds or removes a sheet.
+let shellClasses = null
+let shellGeneration = 0
+const sheetClassCache = new WeakMap()
+const fragmentCache = new Map()
+
+function invalidateShellClasses() { shellGeneration += 1 }
+
+function collectShellClassNames() {
+  if (shellClasses && shellClasses.generation === shellGeneration) return shellClasses.names
+  const names = new Set()
+  for (const sheet of document.styleSheets) {
+    if (sheet.ownerNode?.dataset?.dshBot) continue
+    let list = sheetClassCache.get(sheet)
+    if (!list) { list = sheetClassNames(sheet); sheetClassCache.set(sheet, list) }
+    for (const name of list) names.add(name)
+  }
+  shellClasses = { generation: shellGeneration, names }
+  fragmentCache.clear()
+  return names
+}
+
 function sheetClassNames(sheet) {
   const names = []
   const visit = (rules) => {
@@ -1035,41 +1059,38 @@ function sheetClassNames(sheet) {
 }
 
 function compileFragmentSelectors(text, names) {
-  const compiled = new Map()
   return text.replace(FRAGMENT_SELECTOR, (whole, fragment) => {
-    if (!compiled.has(fragment)) {
+    let replacement = fragmentCache.get(fragment)
+    if (replacement === undefined) {
       const exact = []
       for (const name of names) if (name.includes(fragment)) exact.push(`.${name}`)
-      compiled.set(fragment, exact.length ? `:is(${exact.join(',')})` : whole)
+      replacement = exact.length ? `:is(${exact.join(',')})` : whole
+      fragmentCache.set(fragment, replacement)
     }
-    return compiled.get(fragment)
+    return replacement
   })
 }
 
 export function installCompiledStyles(text, tag) {
   const style = installStyles('', tag)
-  const cache = new WeakMap()
   const render = () => {
-    const names = new Set()
-    for (const sheet of document.styleSheets) {
-      if (sheet.ownerNode?.dataset?.dshBot) continue
-      let list = cache.get(sheet)
-      if (!list) { list = sheetClassNames(sheet); cache.set(sheet, list) }
-      for (const name of list) names.add(name)
-    }
-    const next = compileFragmentSelectors(text, names)
+    const next = compileFragmentSelectors(text, collectShellClassNames())
     if (style.textContent !== next) style.textContent = next
   }
   render()
   // Lazily loaded shell features append their own sheets later.
   let timer
   const schedule = () => { clearTimeout(timer); timer = setTimeout(render, 120) }
-  const onLoad = (event) => { if (event.target instanceof HTMLLinkElement) schedule() }
+  const onLoad = (event) => {
+    if (event.target instanceof HTMLLinkElement) { invalidateShellClasses(); schedule() }
+  }
   // Our own sheets name no shell classes, so adding one (the panel's first open adds the
   // chat column's rule) recompiles nothing.
   const shell = node => node.dataset?.dshBot === undefined
   const observer = new MutationObserver((records) => {
-    if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(shell))) schedule()
+    if (!records.some(record => [...record.addedNodes, ...record.removedNodes].some(shell))) return
+    invalidateShellClasses()
+    schedule()
   })
   observer.observe(document.head, { childList: true })
   document.addEventListener('load', onLoad, true)
