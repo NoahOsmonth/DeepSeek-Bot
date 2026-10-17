@@ -1,0 +1,134 @@
+{
+  "role": "tester",
+  "project": "dsbot-plan-copy",
+  "run": "2026-10-17T11:55:02.987Z",
+  "commit": "c94299a10f839af9c342fbda86792247b83124b4",
+  "command": {
+    "cmd": "node --test \"ds-bot/test/acceptance/*.test.js\"",
+    "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+    "exit": 1,
+    "output_tail": [
+      "  +   'Copy plan as Markdown',",
+      "  +   'Loading the plan…',",
+      "  +   'This plan is not available.',",
+      "  +   'The plan could not be loaded.',",
+      "  +   'This plan preview has expired.',",
+      "  +   'Could not copy the plan.'",
+      "  + ]",
+      "  - []",
+      "  ",
+      "      at TestContext.<anonymous> (file:///C:/Users/sigmu/Desktop/dsbot-worktrees/plan-copy/ds-bot/test/acceptance/plan-view.test.js:483:10)",
+      "      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+      "      at async Test.run (node:internal/test_runner/test:1313:7)",
+      "      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {",
+      "    generatedMessage: false,",
+      "    code: 'ERR_ASSERTION',",
+      "    actual: [ 'Plan', 'Copy plan as Markdown', 'Loading the plan…', 'This plan is not available.', 'The plan could not be loaded.', 'This plan preview has expired.', 'Could not copy the plan.' ],",
+      "    expected: [],",
+      "    operator: 'deepStrictEqual',",
+      "    diff: 'simple'",
+      "  }"
+    ]
+  },
+  "tests": [
+    {
+      "requirement": "R1",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R1 registers and disposes the plan tab type, body and title",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R2",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R2 registers the plan view with the shell group and withdraws it with the group",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R3",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R3 reads review previews and reports an expired one",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R4",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R4 maps the live, failed, unavailable and loading states",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R5",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R5 copies the whole plan markdown verbatim",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R6",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R6 announces Copied for 1.2 seconds and clears the timer on unmount",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R7",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R7 shows the failure text and never Copied when the copy fails",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R8",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R8 shows state lines and the resource failure message",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R9",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R9 falls back from the plan title to the captured title and Plan",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R10",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R10 keeps plan styles on existing tokens and the 8px radius",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: src/client/plan-view.js is missing or cannot be built: the plan view module under test does not exist yet"
+    },
+    {
+      "requirement": "R11",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R11 adds the plan view strings to the Chinese dictionary",
+      "frozen_at": "c94299a10f839af9c342fbda86792247b83124b4",
+      "spec_version": 1,
+      "at_freeze": "fail",
+      "failure_kind": "assertion",
+      "failure_message": "AssertionError [ERR_ASSERTION]: the Chinese dictionary has no entry for: Plan, Copy plan as Markdown, Loading the plan…, This plan is not available., The plan could not be loaded., This plan preview has expired., Could not copy the plan."
+    }
+  ]
+}

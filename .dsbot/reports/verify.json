@@ -1,0 +1,226 @@
+{
+  "role": "tester",
+  "project": "dsbot-plan-copy",
+  "run": "2026-10-17T12:14:00.000Z",
+  "commit": "307a5785c71ed764b77f81e8377e592358e16aa3",
+  "verdict": "PASS",
+  "environment": {
+    "os": "Microsoft Windows 11 Home 10.0.26300.0",
+    "node": "v24.17.0",
+    "notes": "Worktree C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy on feat/plan-copy; verified commit 307a5785c71ed764b77f81e8377e592358e16aa3, freeze commit c94299a10f839af9c342fbda86792247b83124b4. npm --prefix ds-bot test recorded here is the steady-state run: exit 0, 648 tests, 648 pass, 0 fail, 23882 ms. The work-dir timing flake seen in other runs is documented in failures."
+  },
+  "results": [
+    {
+      "requirement": "R1",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R1 registers and disposes the plan tab type, body and title",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R2",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R2 registers the plan view with the shell group and withdraws it with the group",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R3",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R3 reads review previews and reports an expired one",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R4",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R4 maps the live, failed, unavailable and loading states",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R5",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R5 copies the whole plan markdown verbatim",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R6",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R6 announces Copied for 1.2 seconds and clears the timer on unmount",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R7",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R7 shows the failure text and never Copied when the copy fails",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R8",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R8 shows state lines and the resource failure message",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R9",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R9 falls back from the plan title to the captured title and Plan",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R10",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R10 keeps plan styles on existing tokens and the 8px radius",
+      "status": "PASS"
+    },
+    {
+      "requirement": "R11",
+      "test": "ds-bot/test/acceptance/plan-view.test.js::R11 adds the plan view strings to the Chinese dictionary",
+      "status": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "node --test \"ds-bot/test/acceptance/*.test.js\"",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 0,
+      "output_tail": [
+        "✔ R1 registers and disposes the plan tab type, body and title (75.0809ms)",
+        "✔ R2 registers the plan view with the shell group and withdraws it with the group (2.2043ms)",
+        "✔ R3 reads review previews and reports an expired one (3.8163ms)",
+        "✔ R4 maps the live, failed, unavailable and loading states (1.5953ms)",
+        "✔ R5 copies the whole plan markdown verbatim (4.0492ms)",
+        "✔ R6 announces Copied for 1.2 seconds and clears the timer on unmount (6.6689ms)",
+        "✔ R7 shows the failure text and never Copied when the copy fails (5.0095ms)",
+        "✔ R8 shows state lines and the resource failure message (5.4684ms)",
+        "✔ R9 falls back from the plan title to the captured title and Plan (2.3051ms)",
+        "✔ R10 keeps plan styles on existing tokens and the 8px radius (2.7439ms)",
+        "✔ R11 adds the plan view strings to the Chinese dictionary (16.5268ms)",
+        "ℹ tests 11",
+        "ℹ suites 0",
+        "ℹ pass 11",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 233.7284"
+      ]
+    },
+    {
+      "cmd": "npm --prefix ds-bot test",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 0,
+      "output_tail": [
+        "✔ the folder menu lists DSH projects and the folders Bots use, but not the team workspace (91.5168ms)",
+        "✔ the folder menu browses through the DSH folder picker (56.1882ms)",
+        "[ds-bot] ds-bot: model for Editor not applied: TypeError: defaults.saveSelection is not a function",
+        "at file:///~/Desktop/dsbot-worktrees/plan-copy/ds-bot/src/host/models.js:136:24",
+        "✔ a Bot the Main Bot creates runs on its creator's model unless one is named (43.9845ms)",
+        "✔ a fresh part runs on the Bot's model, not on the earlier part's last request (213.9173ms)",
+        "✔ a model the user picks while the fresh part is made reaches the fresh part (118.8647ms)",
+        "✔ a Bot without a model of its own goes on with the earlier part's route (576.0877ms)",
+        "[ds-bot] ds-bot: the working folder ~\\AppData\\Local\\Temp\\ds-bot-work-dir-lY8lEc\\project is gone; Writer starts in the team workspace",
+        "✔ a Bot whose folder is gone changes to the team folder before DSH checks it, then moves to a fresh part there (138.1246ms)",
+        "✔ a team folder that was deleted is made again before DSH checks it (112.4982ms)",
+        "✔ a Bot deleted while its chat moves to a new folder leaves no fresh part behind (334.6966ms)",
+        "ℹ tests 648",
+        "ℹ suites 0",
+        "ℹ pass 648",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 23882.6754"
+      ]
+    },
+    {
+      "cmd": "npm --prefix ds-bot run lint",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 0,
+      "output_tail": [
+        "",
+        "> ds-bot@0.1.7 lint",
+        "> node scripts/lint.mjs",
+        "",
+        "src/client/sources.js:14:31: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `for…of` can iterate over iterable, it's unnecessary to convert to an array.",
+        "test/bot-browsers.test.js:16:31: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `for…of` can iterate over iterable, it's unnecessary to convert to an array.",
+        "src/client/mark.js:72:46: warning unicorn(prefer-string-starts-ends-with): Prefer String#startsWith over a regex with a caret. help: Replace `/^bt-poke/.test(event.animationName)` with `event.animationName.startsWith('bt-poke')`.",
+        "src/client/read-page.js:55:40: warning eslint(no-control-regex): Unexpected control characters help: Avoid matching control characters in regular expressions. If intentional, consider using a Unicode escape instead.",
+        "src/client/read-page.js:61:15: warning eslint(no-control-regex): Unexpected control characters help: Avoid matching control characters in regular expressions. If intentional, consider using a Unicode escape instead.",
+        "src/client/read-page.js:219:40: warning eslint(no-control-regex): Unexpected control characters help: Avoid matching control characters in regular expressions. If intentional, consider using a Unicode escape instead.",
+        "dev/mock-llm.mjs:345:9: warning unicorn(prefer-string-starts-ends-with): Prefer String#startsWith over a regex with a caret. help: Replace `/^User: 撑爆/.test(userLine)` with `userLine.startsWith('User: 撑爆')`.",
+        "test/model-menu.test.js:108:21: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `effortRows({ efforts, defaultEffort: 'high' }).map` returns a new array. Spreading it into an array expression to create a new array is redundant.",
+        "test/model-menu.test.js:109:21: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `effortRows({ efforts }).map` returns a new array. Spreading it into an array expression to create a new array is redundant.",
+        "src/host/browser.js:127:23: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `for…of` can iterate over iterable, it's unnecessary to convert to an array.",
+        "src/host/agents.js:39:32: warning unicorn(no-useless-spread): Using a spread operator here creates a new array unnecessarily. help: `for…of` can iterate over iterable, it's unnecessary to convert to an array.",
+        "src/client/bot-settings.js:130:94: warning unicorn(no-useless-fallback-in-spread): Empty fallbacks in spreads are unnecessary help: Spreading falsy values in object literals won't add any unexpected properties, so it's unnecessary to add an empty object as fallback.",
+        "src/client/activity-row.js:54:52: warning unicorn(prefer-string-starts-ends-with): Prefer String#startsWith over a regex with a caret. help: Replace `/^bt-row/.test(event.animationName)` with `event.animationName.startsWith('bt-row')`."
+      ]
+    },
+    {
+      "cmd": "node ds-bot/scripts/build-client.mjs --check",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 0,
+      "output_tail": []
+    },
+    {
+      "cmd": "git diff --name-only c94299a10f839af9c342fbda86792247b83124b4..HEAD -- ds-bot/test/acceptance/plan-view.test.js",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 0,
+      "output_tail": []
+    },
+    {
+      "cmd": "node --import ./test/harness-resolve.mjs --test test/work-dir.test.js",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy\\ds-bot",
+      "exit": 0,
+      "output_tail": [
+        "✔ the folder menu lists DSH projects and the folders Bots use, but not the team workspace (90.4223ms)",
+        "✔ the folder menu browses through the DSH folder picker (88.8198ms)",
+        "[ds-bot] ds-bot: model for Editor not applied: TypeError: defaults.saveSelection is not a function",
+        "at file:///~/Desktop/dsbot-worktrees/plan-copy/ds-bot/src/host/models.js:136:24",
+        "✔ a Bot the Main Bot creates runs on its creator's model unless one is named (29.769ms)",
+        "✔ a fresh part runs on the Bot's model, not on the earlier part's last request (44.0657ms)",
+        "✔ a model the user picks while the fresh part is made reaches the fresh part (102.4275ms)",
+        "✔ a Bot without a model of its own goes on with the earlier part's route (49.3694ms)",
+        "[ds-bot] ds-bot: the working folder ~\\AppData\\Local\\Temp\\ds-bot-work-dir-OkXbRj\\project is gone; Writer starts in the team workspace",
+        "✔ a Bot whose folder is gone changes to the team folder before DSH checks it, then moves to a fresh part there (90.4461ms)",
+        "✔ a team folder that was deleted is made again before DSH checks it (13.0649ms)",
+        "✔ a Bot deleted while its chat moves to a new folder leaves no fresh part behind (93.0766ms)",
+        "ℹ tests 19",
+        "ℹ suites 0",
+        "ℹ pass 19",
+        "ℹ fail 0",
+        "ℹ cancelled 0",
+        "ℹ skipped 0",
+        "ℹ todo 0",
+        "ℹ duration_ms 1661.2203"
+      ]
+    },
+    {
+      "cmd": "node --test \"ds-bot/test/acceptance/*.test.js\"  (canary: R5 expectation inverted, then reverted with git checkout)",
+      "cwd": "C:\\Users\\sigmu\\Desktop\\dsbot-worktrees\\plan-copy",
+      "exit": 1,
+      "output_tail": [
+        "test at ds-bot\\test\\acceptance\\plan-view.test.js:371:1",
+        "✖ R5 copies the whole plan markdown verbatim (5.4323ms)",
+        "  AssertionError [ERR_ASSERTION]: the copy control does not write the whole plan markdown verbatim, selection ignored",
+        "  + actual - expected",
+        "  ",
+        "    [",
+        "  +   '  # Plan\\n\\nShip it on Friday.  \\n'",
+        "  -   'canary'",
+        "    ]",
+        "  ",
+        "      at TestContext.<anonymous> (file:///C:/Users/sigmu/Desktop/dsbot-worktrees/plan-copy/ds-bot/test/acceptance/plan-view.test.js:374:10)",
+        "      at async Test.run (node:internal/test_runner/test:1313:7)",
+        "      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {",
+        "    generatedMessage: false,",
+        "    code: 'ERR_ASSERTION',",
+        "    actual: [ '  # Plan\\n\\nShip it on Friday.  \\n' ],",
+        "    expected: [ 'canary' ],",
+        "    operator: 'deepStrictEqual',",
+        "    diff: 'simple'",
+        "  }"
+      ]
+    }
+  ],
+  "failures": [
+    "Pre-existing flake in ds-bot/test/work-dir.test.js, not in this diff: 4 of 5 full `npm --prefix ds-bot test` runs during verification had 1-2 reds, every one of them in that file and every one with \"Error: until: the condition did not hold within 2 s\" (a 2 s wait that times out under CPU contention). Tests seen red: \"a model the user picks while the fresh part is made reaches the fresh part\" (test at work-dir.test.js:473, failing at :488, 2127 ms), \"a fresh part runs on the Bot's model, not on the earlier part's last request\" (:463, failing at :468, 2054 ms), \"a rolled-back Bot does not come back with a save queued before the rollback\" (2215 ms and 2628 ms). The recorded run above is the clean steady state: exit 0, 648/648 pass.",
+    "Run alone with the harness resolver (`node --import ./test/harness-resolve.mjs --test test/work-dir.test.js`) the same file passed 19/19 in 4 consecutive runs, with 1 red in 7 alone runs — the flake rate, not a regression. Neither ds-bot/test/work-dir.test.js nor ds-bot/src/host/ appears in `git diff --name-only c94299a..HEAD`, so the plan-copy diff cannot cause it."
+  ],
+  "gaps": [
+    "The full suite is timing-flaky: a gate re-run of `npm --prefix ds-bot test` may hit the work-dir 2 s timeout even though the recorded steady-state run is green.",
+    "No live GUI run of the plan preview: the code under test exists only in the plan-copy worktree, while the running DSH web UI at 127.0.0.1:3100 serves the main checkout, so the new tab could not be reached there. The plan view was verified through the acceptance harness (the client module bundled with esbuild and run in a vm), not by clicking it in a browser."
+  ],
+  "canary": {
+    "test": "ds-bot/test/acceptance/plan-view.test.js::R5 copies the whole plan markdown verbatim",
+    "went_red": true
+  }
+}
