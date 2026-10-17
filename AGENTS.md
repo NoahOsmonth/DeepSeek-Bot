@@ -2,6 +2,15 @@
 
 Instructions for AI coding agents that work on this repository. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md), which has the same rules with more detail.
 
+## This checkout is not ours
+
+This working copy is a local fork of someone else's repository. We change its internals for ourselves; nothing goes back upstream.
+
+- Never `git push`. Never open a pull request, an issue or a comment on the remote. Nothing we do leaves this machine.
+- Do not write `Fixes #n`, `Refs #n` or any issue claim into a commit, a branch name or a note: there is no PR to link and the issue is not ours to touch.
+- The "Branches, pull requests and issues" section below describes the upstream project's workflow. For us it does not apply: work on local branches, commit locally, stop there.
+- Do not ask maintainers, do not triage their issues, do not propose changes upstream.
+
 ## What this project is
 
 DS Bot is a team of long-lived Bots, built on DeepSeek Harness (DSH). It has two parts:
