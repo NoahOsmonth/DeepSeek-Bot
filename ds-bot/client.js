@@ -298,6 +298,10 @@ var ZH = {
   // Model menu
   Default: "默认",
   "Thinking level": "思考强度",
+  "Thinking level: {level}": "思考强度：{level}",
+  "Thinking level for {name}": "{name} 的思考强度",
+  "Default: {level}": "默认：{level}",
+  "Set by the model.": "由模型决定。",
   "Model: {model}": "模型：{model}",
   none: "无",
   "Choose a model": "选择模型",
@@ -6805,7 +6809,7 @@ function modelOf(bot, roster) {
   return { ref, name: served?.name ?? rest.join("/"), provider: served?.providerName ?? provider, served: served !== void 0 };
 }
 var effortCache = /* @__PURE__ */ new Map();
-function useEfforts(served, ref, actions) {
+function thinkingOf(served, ref, actions) {
   const [fetched, setFetched] = (0, import_react14.useState)(void 0);
   (0, import_react14.useEffect)(() => {
     setFetched(void 0);
@@ -6831,24 +6835,27 @@ function effortRows(reasoning) {
     ...reasoning.efforts.map((effort) => ({ effort: effort.id, label: effort.name }))
   ];
 }
+function EffortItems({ reasoning, current, onPick }) {
+  return effortRows(reasoning).map((row) => (0, import_react14.createElement)(
+    "button",
+    {
+      key: row.effort ?? "default",
+      type: "button",
+      role: "menuitemradio",
+      "aria-checked": row.effort === current,
+      onClick: () => onPick(row.effort)
+    },
+    (0, import_react14.createElement)("span", { className: "bt-menu-label" }, row.label),
+    (0, import_react14.createElement)("span", { className: "bt-model-tick", "aria-hidden": true }, row.effort === current ? (0, import_react14.createElement)(CheckIcon) : null)
+  ));
+}
 function EffortRows({ reasoning, current, onPick }) {
   return (0, import_react14.createElement)(
     import_react14.Fragment,
     null,
     (0, import_react14.createElement)("div", { className: "bt-menu-sep", role: "separator" }),
     (0, import_react14.createElement)("div", { className: "bt-model-group", role: "presentation" }, t("Thinking level")),
-    effortRows(reasoning).map((row) => (0, import_react14.createElement)(
-      "button",
-      {
-        key: row.effort ?? "default",
-        type: "button",
-        role: "menuitemradio",
-        "aria-checked": row.effort === current,
-        onClick: () => onPick(row.effort)
-      },
-      (0, import_react14.createElement)("span", { className: "bt-menu-label" }, row.label),
-      (0, import_react14.createElement)("span", { className: "bt-model-tick", "aria-hidden": true }, row.effort === current ? (0, import_react14.createElement)(CheckIcon) : null)
-    ))
+    (0, import_react14.createElement)(EffortItems, { reasoning, current, onPick })
   );
 }
 function ModelRows({ roster, current, onPick }) {
@@ -6918,7 +6925,7 @@ function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onPickEffo
   const shown = modelOf(bot, roster);
   const current = bot.model ?? bot.appliedModel;
   const served = servedOf(roster, current);
-  const reasoning = useEfforts(served, current, actions);
+  const reasoning = thinkingOf(served, current, actions);
   const picked = reasoning?.efforts?.some((effort) => effort.id === bot.effort) ? bot.effort : void 0;
   const currentEffort = picked ?? reasoning?.defaultEffort;
   const effortLabel = currentEffort === void 0 ? reasoning?.efforts?.length > 0 ? t("Default") : void 0 : reasoning.efforts.find((effort) => effort.id === currentEffort)?.name ?? currentEffort;
@@ -6975,6 +6982,61 @@ function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onPickEffo
         close();
         actions.openHarnessSettings();
       } }, (0, import_react14.createElement)(SlidersIcon), (0, import_react14.createElement)("span", { className: "bt-menu-label" }, t("Models and providers…"))) : null
+    ), document.body) : null
+  );
+}
+function ThinkingRow2({ bot, roster, actions, run }) {
+  const { isOpen, shownPlace, leaving, button, menu, open, close } = useAnchoredMenu();
+  const ref = bot.model ?? bot.appliedModel;
+  const reasoning = thinkingOf(servedOf(roster, ref), ref, actions);
+  const efforts = reasoning?.efforts ?? [];
+  const picked = efforts.find((effort) => effort.id === bot.effort);
+  const fallback = efforts.find((effort) => effort.id === reasoning?.defaultEffort);
+  if (efforts.length === 0) return null;
+  const shown = picked ?? fallback;
+  const toggle = () => {
+    if (isOpen) {
+      close();
+      return;
+    }
+    void actions?.refreshModels?.();
+    open();
+  };
+  const pick2 = (effort) => {
+    close();
+    if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }));
+  };
+  return (0, import_react14.createElement)(
+    import_react14.Fragment,
+    null,
+    (0, import_react14.createElement)(
+      "div",
+      { className: "bt-set-row bt-bs-row" },
+      (0, import_react14.createElement)(
+        "span",
+        { className: "bt-set-copy" },
+        (0, import_react14.createElement)("span", { className: "bt-bs-label" }, t("Thinking level")),
+        picked === void 0 ? (0, import_react14.createElement)("span", { className: "bt-set-hint" }, t("Set by the model.")) : null
+      ),
+      (0, import_react14.createElement)(
+        "button",
+        {
+          ref: button,
+          type: "button",
+          className: "bt-model-trigger",
+          "aria-haspopup": "menu",
+          "aria-expanded": isOpen,
+          "aria-label": picked !== void 0 ? t("Thinking level: {level}", { level: picked.name }) : fallback !== void 0 ? t("Default: {level}", { level: fallback.name }) : t("Thinking level"),
+          onClick: toggle
+        },
+        (0, import_react14.createElement)("span", { className: "bt-model-copy" }, (0, import_react14.createElement)("span", { className: "bt-model-name" }, shown?.name ?? t("Default"))),
+        (0, import_react14.createElement)(Caret)
+      )
+    ),
+    shownPlace ? (0, import_react_dom6.createPortal)((0, import_react14.createElement)(
+      "div",
+      { ref: menu, className: `bt-menu bt-model-menu${shownPlace.bottom !== void 0 ? " bt-menu-up" : ""}`, role: "menu", "aria-label": t("Thinking level for {name}", { name: bot.name }), style: shownPlace, "data-leaving": leaving || void 0 },
+      (0, import_react14.createElement)(EffortItems, { reasoning, current: picked?.id, onPick: pick2 })
     ), document.body) : null
   );
 }
@@ -8482,7 +8544,8 @@ function BotSettingsForm({ bot, roster, actions, run }) {
         { className: "bt-set-row bt-bs-row" },
         (0, import_react19.createElement)("span", { className: "bt-set-copy" }, (0, import_react19.createElement)("span", { className: "bt-bs-label" }, t("Model")), (0, import_react19.createElement)("span", { className: "bt-set-hint" }, modelHint(bot, roster))),
         (0, import_react19.createElement)(ModelMenu, { bot, roster, actions, run })
-      )
+      ),
+      (0, import_react19.createElement)(ThinkingRow2, { bot, roster, actions, run })
     ),
     (0, import_react19.createElement)(
       Card,

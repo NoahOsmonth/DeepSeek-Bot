@@ -269,6 +269,10 @@ const ZH = {
   // Model menu
   Default: '默认',
   'Thinking level': '思考强度',
+  'Thinking level: {level}': '思考强度：{level}',
+  'Thinking level for {name}': '{name} 的思考强度',
+  'Default: {level}': '默认：{level}',
+  'Set by the model.': '由模型决定。',
   'Model: {model}': '模型：{model}',
   none: '无',
   'Choose a model': '选择模型',
