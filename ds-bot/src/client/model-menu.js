@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { currentPart } from './text.js'
 import { CheckIcon, SlidersIcon } from './icons.js'
 import { BotMark } from './mark.js'
-import { openHarnessOnboarding, openHarnessSettings } from './sidebar.js'
 import { SPRING_POP, SPRING_SHAPE, spring, useLinger } from './motion.js'
 import { t } from './i18n.js'
 
@@ -45,7 +44,7 @@ export function modelOf(bot, roster) {
 // The thinking levels of one model, `{efforts, defaultEffort?}` or undefined when it
 // has none. The catalog carries them for models Bots use; any other ref asks the host.
 const effortCache = new Map()
-function useEfforts(served, ref, actions) {
+export function thinkingOf(served, ref, actions) {
   const [fetched, setFetched] = useState(undefined)
   useEffect(() => {
     setFetched(undefined)
@@ -72,16 +71,22 @@ export function effortRows(reasoning) {
   ]
 }
 
+// The level buttons alone, shared by the Thinking section of the chat menu and the
+// Thinking level row of a Bot's settings.
+export function EffortItems({ reasoning, current, onPick }) {
+  return effortRows(reasoning).map(row => h('button', {
+    key: row.effort ?? 'default', type: 'button', role: 'menuitemradio', 'aria-checked': row.effort === current,
+    onClick: () => onPick(row.effort),
+  },
+  h('span', { className: 'bt-menu-label' }, row.label),
+  h('span', { className: 'bt-model-tick', 'aria-hidden': true }, row.effort === current ? h(CheckIcon) : null)))
+}
+
 function EffortRows({ reasoning, current, onPick }) {
   return h(Fragment, null,
     h('div', { className: 'bt-menu-sep', role: 'separator' }),
     h('div', { className: 'bt-model-group', role: 'presentation' }, t('Thinking level')),
-    effortRows(reasoning).map(row => h('button', {
-      key: row.effort ?? 'default', type: 'button', role: 'menuitemradio', 'aria-checked': row.effort === current,
-      onClick: () => onPick(row.effort),
-    },
-    h('span', { className: 'bt-menu-label' }, row.label),
-    h('span', { className: 'bt-model-tick', 'aria-hidden': true }, row.effort === current ? h(CheckIcon) : null))))
+    h(EffortItems, { reasoning, current, onPick }))
 }
 
 function ModelRows({ roster, current, onPick }) {
@@ -143,7 +148,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
   const shown = modelOf(bot, roster)
   const current = bot.model ?? bot.appliedModel
   const served = servedOf(roster, current)
-  const reasoning = useEfforts(served, current, actions)
+  const reasoning = thinkingOf(served, current, actions)
   // The level the Bot runs on: its pick when the model serves it, else the model's own.
   const picked = reasoning?.efforts?.some(effort => effort.id === bot.effort) ? bot.effort : undefined
   const currentEffort = picked ?? reasoning?.defaultEffort
@@ -183,8 +188,48 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
       models.length > 0 ? h(ModelRows, { roster, current, onPick: pick })
         : h('div', { className: 'bt-model-none' }, t('No models are set up in DeepSeek Harness yet.')),
       effortRows(reasoning).length > 0 ? h(EffortRows, { reasoning, current: picked, onPick: pickEffort }) : null,
-      h('div', { className: 'bt-menu-sep', role: 'separator' }),
-      h('button', { type: 'button', role: 'menuitem', onClick: () => { close(); openHarnessSettings() } }, h(SlidersIcon), h('span', { className: 'bt-menu-label' }, t('Models and providers…')))), document.body) : null)
+      actions.openHarnessSettings ? h('div', { className: 'bt-menu-sep', role: 'separator' }) : null,
+      actions.openHarnessSettings ? h('button', { type: 'button', role: 'menuitem', onClick: () => { close(); actions.openHarnessSettings() } }, h(SlidersIcon), h('span', { className: 'bt-menu-label' }, t('Models and providers…'))) : null), document.body) : null)
+}
+
+// The Thinking level row of a Bot's settings: the Bot's pick when the model still serves
+// it, else the model's own default, else Default. A model with no levels renders nothing,
+// so a Bot on such a model keeps a single Model row.
+export function ThinkingRow({ bot, roster, actions, run }) {
+  const { isOpen, shownPlace, leaving, button, menu, open, close } = useAnchoredMenu()
+  const ref = bot.model ?? bot.appliedModel
+  const reasoning = thinkingOf(servedOf(roster, ref), ref, actions)
+  const efforts = reasoning?.efforts ?? []
+  const picked = efforts.find(effort => effort.id === bot.effort)
+  const fallback = efforts.find(effort => effort.id === reasoning?.defaultEffort)
+  if (efforts.length === 0) return null
+  const shown = picked ?? fallback
+  const toggle = () => {
+    if (isOpen) { close(); return }
+    // DSH settings can change the list at any time, so opening asks again.
+    void actions?.refreshModels?.()
+    open()
+  }
+  const pick = (effort) => {
+    close()
+    if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }))
+  }
+  return h(Fragment, null,
+    h('div', { className: 'bt-set-row bt-bs-row' },
+      h('span', { className: 'bt-set-copy' },
+        h('span', { className: 'bt-bs-label' }, t('Thinking level')),
+        picked === undefined ? h('span', { className: 'bt-set-hint' }, t('Set by the model.')) : null),
+      h('button', {
+        ref: button, type: 'button', className: 'bt-model-trigger',
+        'aria-haspopup': 'menu', 'aria-expanded': isOpen,
+        'aria-label': picked !== undefined ? t('Thinking level: {level}', { level: picked.name })
+          : fallback !== undefined ? t('Default: {level}', { level: fallback.name }) : t('Thinking level'),
+        onClick: toggle,
+      },
+      h('span', { className: 'bt-model-copy' }, h('span', { className: 'bt-model-name' }, shown?.name ?? t('Default'))),
+      h(Caret))),
+    shownPlace ? createPortal(h('div', { ref: menu, className: `bt-menu bt-model-menu${shownPlace.bottom !== undefined ? ' bt-menu-up' : ''}`, role: 'menu', 'aria-label': t('Thinking level for {name}', { name: bot.name }), style: shownPlace, 'data-leaving': leaving || undefined },
+      h(EffortItems, { reasoning, current: picked?.id, onPick: pick })), document.body) : null)
 }
 
 // The card a Bot's chat opens on while the Bot has no model, or has one that is no
@@ -225,7 +270,7 @@ export function ModelChoiceDock({ sessionId, useRoster, actions }) {
             title: model.ref === roster.defaultModel ? `${model.ref} · ${t('Harness default')}` : model.ref,
             onClick: () => pick(model.ref),
           }, model.name, busy === model.ref ? h('span', { className: 'bt-model-spin', 'aria-label': t('Saving…') }) : null))))),
-        h('button', { key: 'manage', type: 'button', className: 'bt-model-chip bt-model-chip-quiet', onClick: openHarnessSettings }, h(SlidersIcon), t('Manage models')),
+        actions.openHarnessSettings ? h('button', { key: 'manage', type: 'button', className: 'bt-model-chip bt-model-chip-quiet', onClick: actions.openHarnessSettings }, h(SlidersIcon), t('Manage models')) : null,
       ]
   return h('div', { className: 'bt-model-dock' },
     h('div', { className: 'bt-astack', 'data-lead': '' },
@@ -243,8 +288,8 @@ export function ModelChoiceDock({ sessionId, useRoster, actions }) {
 function setupChoices(actions) {
   return [
     actions.canSignIn?.() ? [t('Sign in to DeepSeek'), () => actions.signIn()] : null,
-    [t('Enter a DeepSeek API key'), () => openHarnessOnboarding('deepseek-official')],
-    [t('Open settings to set up a custom model'), openHarnessSettings],
+    actions.openHarnessOnboarding ? [t('Enter a DeepSeek API key'), () => actions.openHarnessOnboarding('deepseek-official')] : null,
+    actions.openHarnessSettings ? [t('Open settings to set up a custom model'), actions.openHarnessSettings] : null,
   ].filter(Boolean)
 }
 
@@ -267,7 +312,7 @@ function SignInHost({ entry, actions }) {
     ...hooks,
     t: actions.accountT(),
     complete: close,
-    useApiKey: () => { close(); openHarnessOnboarding('deepseek-official') },
+    useApiKey: () => { close(); actions.openHarnessOnboarding('deepseek-official') },
   })
 }
 

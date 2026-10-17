@@ -15,6 +15,7 @@ const ZH = {
   'New chat': '新对话',
   'New…': '新建',
   'Collapse sidebar': '收起侧边栏',
+  'Expand sidebar': '展开侧边栏',
   'Animation': '动画',
   'Bot animation': 'Bot 动画',
   'Quiet': '安静',
@@ -268,6 +269,10 @@ const ZH = {
   // Model menu
   Default: '默认',
   'Thinking level': '思考强度',
+  'Thinking level: {level}': '思考强度：{level}',
+  'Thinking level for {name}': '{name} 的思考强度',
+  'Default: {level}': '默认：{level}',
+  'Set by the model.': '由模型决定。',
   'Model: {model}': '模型：{model}',
   none: '无',
   'Choose a model': '选择模型',
