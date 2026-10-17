@@ -1,0 +1,50 @@
+{
+  "role": "reviewer",
+  "project": "dsbot-plan-copy",
+  "round": 1,
+  "commit": "307a5785c71ed764b77f81e8377e592358e16aa3",
+  "spec_version": 1,
+  "verdict": "APPROVE",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "minor",
+      "file": "ds-bot/src/client/plan-view.js",
+      "line": 100,
+      "requirement": null,
+      "issue": "The body passes MarkdownText a freshly built labels object on every render: labels={markdownLabels()} (plan-view.js:100), and markdownLabels() (plan-view.js:53) returns a new literal each call. MarkdownText is memoized on that prop, so each copy click, and each 1200 ms/2000 ms status flip, re-renders and re-parses the whole plan document. Not user-visible for a normal-size plan, but it is a documented contract of the component the change adds.",
+      "evidence": "dsh-client-ui-primitives/lib/types/markdown/MarkdownText.d.ts:22-26: labels must be a reference-stable object, because a new identity discards the render cache. DSH's own plan preview does exactly that: dsh-client-ui-plan/lib/client.js:183-194 builds labels inside useMemo keyed on the translator. No requirement covers render cost, so no requirement id.",
+      "status": "open"
+    }
+  ],
+  "requirements_reviewed": ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11"],
+  "commands": [
+    {
+      "cmd": "npm test",
+      "cwd": "ds-bot",
+      "exit": 1,
+      "output_tail": [
+        "647/648 pass; only failure test/work-dir.test.js:222 \"a running Bot moves at its next step…\": Error: until: the condition did not hold within 2 s (plus EPERM rename in src/host/store.js:296).",
+        "Re-run twice: same failure. Isolated run of that test: 3/3 pass. Pre-existing repo flake, not this diff."
+      ]
+    },
+    {
+      "cmd": "node --test test/acceptance/plan-view.test.js",
+      "cwd": "ds-bot",
+      "exit": 0,
+      "output_tail": ["11/11 pass (R1-R11)."]
+    },
+    {
+      "cmd": "node scripts/build-client.mjs --check",
+      "cwd": "ds-bot",
+      "exit": 0,
+      "output_tail": ["client.js matches src/client."]
+    },
+    {
+      "cmd": "npm run lint",
+      "cwd": "ds-bot",
+      "exit": 0,
+      "output_tail": ["Only pre-existing warnings; none in the new or changed files."]
+    }
+  ]
+}
