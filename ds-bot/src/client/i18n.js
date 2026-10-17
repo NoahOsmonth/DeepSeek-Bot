@@ -852,6 +852,15 @@ const ZH = {
   'Up one level': '上一级',
   'No folders inside.': '里面没有文件夹。',
   'Some folders are not shown.': '还有一些文件夹没有显示。',
+
+  // Plan preview
+  Plan: '计划',
+  'Copy plan as Markdown': '以 Markdown 复制计划',
+  'Loading the plan…': '正在加载计划…',
+  'This plan is not available.': '此计划不可用。',
+  'The plan could not be loaded.': '无法加载计划。',
+  'This plan preview has expired.': '此计划预览已过期。',
+  'Could not copy the plan.': '无法复制计划。',
 }
 
 // Host errors stay English, since Bots read them too; they are translated where the
