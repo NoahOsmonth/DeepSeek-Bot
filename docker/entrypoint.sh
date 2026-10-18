@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Runs dsh web as the node user. The container is the sandbox boundary, so the
 # image offers only the danger-full-access preset (see docker.patch.yml).
 set -eu
@@ -66,4 +66,19 @@ if [ -n "${DSH_TRUSTED_HOST:-}" ]; then
 fi
 export HOME=/home/node
 cd /workspace
+
+# dsh prints the address it listens on inside the container, but the browser
+# reaches the server at the published address and the login cookie is bound to
+# the authority it was issued for: opening the printed 127.0.0.1:3080 URL from
+# the host does nothing, and a cookie minted for another authority does not let
+# the address the user actually types through. Rewrite the printed URL to
+# DSH_PUBLIC_URL so the line in `docker logs` is the one that works.
+PUBLIC_URL=${DSH_PUBLIC_URL:-}
+PUBLIC_URL=${PUBLIC_URL%/}
+if [ -n "$PUBLIC_URL" ]; then
+  replacement=$(printf '%s' "$PUBLIC_URL" | sed 's/[\\&|]/\\&/g')
+  # The filter runs beside dsh and leaves dsh as PID 1, so signals and the
+  # process identity the test checks are unchanged.
+  exec gosu node "$@" > >(sed -u -E "s|^dsh web: http://[^ )]*[?&]token=([^ )&]+).*|dsh web: $replacement/?token=\1|") 2>&1
+fi
 exec gosu node "$@"
