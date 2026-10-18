@@ -145,6 +145,12 @@ UI, which writes the same config.
 - `/data` (`DATA_DIR`) is `DSH_HOME`: the team and chats (`bot/`, `sessions/`),
   profiles, settings and the login cookie key (`.credentials.yaml`).
 - `/workspace` (`WORKSPACE_DIR`) is the team workspace where the Bots work.
+- Extra host directories can be mounted next to these, for example a share with
+  other projects; the Bots see them at the container path you pick.
+
+The `node` user has passwordless `sudo`, so a Bot can install packages and change
+system files inside the container. That is root inside the container only, but it
+reaches every bind mount as root: mount directories you would let a Bot rewrite.
 
 A rebuild reuses the persisted data and workspace. Keep their container
 destinations `/data` and `/workspace` unchanged when you rebuild or move the

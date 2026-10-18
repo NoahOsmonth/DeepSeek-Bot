@@ -30,9 +30,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash git curl ca-certificates \
         python3 python3-pip python3-venv \
-        build-essential jq ripgrep unzip zip ffmpeg less procps gosu \
+        build-essential jq ripgrep unzip zip ffmpeg less procps gosu sudo \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable
+    && corepack enable \
+    && echo 'node ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/node \
+    && chmod 0440 /etc/sudoers.d/node
 
 COPY --from=build /usr/local/ /usr/local/
 COPY --from=build /opt/dsh-template /opt/dsh-template
