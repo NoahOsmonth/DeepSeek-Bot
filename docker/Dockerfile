@@ -37,6 +37,7 @@ RUN apt-get update \
 COPY --from=build /usr/local/ /usr/local/
 COPY --from=build /opt/dsh-template /opt/dsh-template
 COPY --chmod=0755 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/login-gate.mjs /opt/ds-bot/login-gate.mjs
 COPY docker/docker.patch.yml /opt/ds-bot/docker.patch.yml
 
 ENV DSH_HOME=/data \

@@ -104,7 +104,7 @@ try {
   ])
   const probe = `
     const response = await fetch('http://127.0.0.1:3080/');
-    if (![200, 401].includes(response.status)) throw new Error('Unexpected HTTP status: ' + response.status);
+    if (response.status !== 200) throw new Error('A fresh browser must reach the UI: ' + response.status);
   `
   const deadline = Date.now() + 45_000
   let ready = false
