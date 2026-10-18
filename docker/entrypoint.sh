@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Runs dsh web as the node user. The container is the sandbox boundary, so the
 # image offers only the danger-full-access preset (see docker.patch.yml).
 set -eu
@@ -25,12 +25,15 @@ if [ -z "$(ls -A /workspace)" ]; then
   chown node:node /workspace
 fi
 
-# This dsh release accepts only 127.0.0.1 for --host, so an overlay binds all
-# interfaces instead; the container's publish rule is the network boundary.
+# dsh web binds loopback only and its browser gate needs a ?token= exchange per
+# browser. The login gate in front of it owns the published address and does
+# that exchange for a plain visit (see login-gate.mjs), so dsh listens on a
+# private port and the gate listens on the one users open.
 # DSH_LISTEN_PORT only matters with network_mode: host — published ports
 # always map to 3080 inside.
 HOST=${DSH_HOST:-0.0.0.0}
 LISTEN_PORT=${DSH_LISTEN_PORT:-3080}
+GATE_UPSTREAM_PORT=3081
 case "$HOST" in
   0.0.0.0|127.0.0.1) ;;
   *) echo "entrypoint: DSH_HOST must be 0.0.0.0 or 127.0.0.1 (got '$HOST')" >&2; exit 1 ;;
@@ -44,8 +47,8 @@ esac
 cat > /tmp/listen.patch.yml <<EOF
 - id: webserver
   config:
-    host: $HOST
-    port: $LISTEN_PORT
+    host: 127.0.0.1
+    port: $GATE_UPSTREAM_PORT
     compression: gzip
     compressionLevel: 1
     compressionThresholdBytes: 1024
@@ -66,4 +69,18 @@ if [ -n "${DSH_TRUSTED_HOST:-}" ]; then
 fi
 export HOME=/home/node
 cd /workspace
-exec gosu node "$@"
+
+# The gate needs the launch token dsh prints once it is up; the filter below
+# leaves that line in /run/dsh-login-url for it.
+rm -f /run/dsh-login-url
+DSH_GATE_HOST=$HOST DSH_GATE_PORT=$LISTEN_PORT DSH_GATE_UPSTREAM_PORT=$GATE_UPSTREAM_PORT \
+  gosu node node /opt/ds-bot/login-gate.mjs &
+
+# dsh prints its private address. Rewrite the line to the address users open, so
+# the log reads the way they browse, and keep the token beside it for the gate.
+PUBLIC_URL=${DSH_PUBLIC_URL:-http://localhost:$LISTEN_PORT}
+PUBLIC_URL=${PUBLIC_URL%/}
+replacement=$(printf '%s' "$PUBLIC_URL" | sed 's/[\\&|]/\\&/g')
+# The filter runs beside dsh and leaves dsh as PID 1, so signals and the
+# process identity the test checks are unchanged.
+exec gosu node "$@" > >(sed -u -E "s|^dsh web: http://[^ )]*[?&]token=([^ )&]+).*|dsh web: $replacement/?token=\1|;w /run/dsh-login-url") 2>&1

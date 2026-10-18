@@ -9,6 +9,8 @@ services:
     image: ds-bot:local
     ports:
       - "${DSH_PORT:-3080}:3080"
+    environment:
+      DSH_PUBLIC_URL: "http://localhost:${DSH_PORT:-3080}"
     env_file:
       - path: .env
         required: false

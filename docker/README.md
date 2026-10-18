@@ -29,20 +29,20 @@ This builds the local image without pulling a published DS Bot image. The root
 Compose file publishes host port **13080**, and stores data and workspace files
 in `docker/data` and `docker/workspace`.
 
-The log prints a line like `dsh web: http://127.0.0.1:3080/?token=… (LAN:
-http://172.x.x.x:3080/?token=…)`. Take the token from it and open
-`http://<NAS IP>:13080/?token=…` once in your browser: the token sets a signed
-cookie (valid 30 days, bound to that authority), after which
-`http://<NAS IP>:13080/` opens the UI directly. The printed port is the container's;
-use the host port from `ports:` when opening it. The first time the team opens,
-DS Bot creates a Main Bot called Chief.
+The log prints a line like `dsh web: http://localhost:13080/?token=…`, and
+`http://localhost:13080/` opens the UI in any browser with no further step: a
+login gate in front of dsh performs the token exchange for a plain visit. The
+gate's cookie is bound to the address you use, so `localhost`, `127.0.0.1` and a
+NAS IP each sign in on their own the first time; `DSH_PUBLIC_URL` only sets the
+address printed in the log. The first time the team opens, DS Bot creates a Main
+Bot called Chief.
 
 An alternative for users who prefer `.env` is still available in `docker/`:
 
 ```sh
 cd docker
 cp .env.example .env
-# Edit .env: DEEPSEEK_API_KEY, DSH_TRUSTED_HOST, PUID/PGID.
+# Edit .env: DEEPSEEK_API_KEY, DSH_TRUSTED_HOST, DSH_PUBLIC_URL, PUID/PGID.
 docker compose up -d --build
 ```
 
@@ -60,25 +60,28 @@ so file ownership stays right.
 
 ## Network
 
-`dsh web` binds only loopback or all interfaces (`0.0.0.0`) — never a concrete
-LAN address — and its `--host` flag refuses `0.0.0.0`, so the entrypoint writes
-a config overlay that binds all interfaces. Inside a container the publish rule
-is the real boundary, and the trust fence below still applies. The UI checks
-the `Host` header of every `/api` request: loopback is always trusted, and
-every other name or IP you open it at must be listed in `DSH_TRUSTED_HOST`
-(no port — a bare entry trusts it on any port), or the API answers 403.
-`DSH_HOST=127.0.0.1` narrows the bind to loopback (e.g. a reverse proxy in the
-same network namespace); published ports then no longer reach it.
+`dsh web` binds loopback only and its browser gate expects a `?token=` exchange
+per browser. The image runs it on `127.0.0.1:3081` and puts a small login gate
+(`docker/login-gate.mjs`) on the published address: the gate forwards
+everything, and for a root request that dsh refuses it retries with the current
+launch token, which is how a plain `http://host:port/` visit signs the browser
+in. Inside a container the publish rule is the real boundary, and the trust
+fence below still applies. The UI checks the `Host` header of every `/api`
+request: loopback is always trusted, and every other name or IP you open it at
+must be listed in `DSH_TRUSTED_HOST` (no port — a bare entry trusts it on any
+port), or the API answers 403. `DSH_HOST=127.0.0.1` narrows the gate to
+loopback (e.g. a reverse proxy in the same network namespace); published ports
+then no longer reach it.
 
 Alternatives:
 
 - **Host network**: set `network_mode: host` in `compose.yml` and drop `ports:`.
-  The server then binds the NAS's interfaces directly on `DSH_LISTEN_PORT`
+  The gate then binds the NAS's interfaces directly on `DSH_LISTEN_PORT`
   (default 3080); `DSH_HOST=127.0.0.1` narrows it to loopback again.
 - **Reverse proxy / HTTPS**: the proxy must preserve the browser-visible
   `Host` header and forward WebSocket upgrades; add the public host name to
-  `DSH_TRUSTED_HOST`. The printed login URL is the container's — replace its
-  host with the public one when logging in the first time.
+  `DSH_TRUSTED_HOST`. `DSH_PUBLIC_URL` sets the address printed in the log, and
+  the login cookie is bound to the address the browser uses.
 
 **HTTPS is recommended, not required.** The UI works over plain
 `http://<LAN IP>` on this dsh release, but the page is not a secure context
@@ -97,9 +100,10 @@ see `docker/.env.example` for its full list. The main variables are:
 | `DEEPSEEK_API_KEY` | API key for the model endpoint |
 | `DEEPSEEK_BASE_URL` | Override the endpoint (Anthropic-Messages-compatible) |
 | `DSH_TRUSTED_HOST` | Comma-separated host names / IPs the UI answers to |
+| `DSH_PUBLIC_URL` | Address printed in the startup log, e.g. `http://localhost:13080`. Defaults to `http://localhost:$DSH_PORT` in the `.env` deployment |
 | `DSH_PORT` | Alternative `.env` deployment's host port (default 3080); edit `ports` directly in the root Compose file |
-| `DSH_HOST` | Bind address: `0.0.0.0` (default) or `127.0.0.1`; only relevant with `network_mode: host` |
-| `DSH_LISTEN_PORT` | Listen port inside the container (default 3080); only relevant with `network_mode: host` |
+| `DSH_HOST` | Bind address of the login gate: `0.0.0.0` (default) or `127.0.0.1`; only relevant with `network_mode: host` |
+| `DSH_LISTEN_PORT` | Port the login gate listens on (default 3080); only relevant with `network_mode: host` |
 | `PUID` / `PGID` | User/group the server runs as and new files belong to |
 | `DSH_TELEMETRY_DISABLED` | `1` turns off dsh's anonymous telemetry |
 
@@ -193,6 +197,7 @@ services:
       PUID: "1000"
       PGID: "1000"
       DSH_TRUSTED_HOST: "localhost,127.0.0.1"
+      DSH_PUBLIC_URL: "http://localhost:13080"
     volumes:
       - ./data:/data
       - ./workspace:/workspace
@@ -210,6 +215,20 @@ docker compose up -d
 The root `docker-compose.yml` and `docker/compose.yml` still build the local
 image. Choose one setup; do not run both against the same data directory. An
 existing persisted profile is not upgraded automatically.
+
+## "dsh web authentication required"
+
+The login gate should make this message disappear: it signs a browser in on its
+first visit to `http://host:port/`, so the message means a request reached dsh
+without passing through the gate. Check that the container is running
+(`docker compose ps`), that `docker logs` shows a `login gate:` line before the
+`dsh web:` line, and that the port you opened is the published one. If the gate
+line is missing, the port is taken or the gate failed to start.
+
+A `403` instead means the gate is fine and the `Host` fence refused the address:
+add the name or IP you open to `DSH_TRUSTED_HOST`. The cookie lasts 30 days per
+browser and address; `localhost`, `127.0.0.1` and a LAN IP each sign in on their
+own.
 
 ## Limits
 

@@ -62,7 +62,7 @@ try {
 
   shell(`
     test "$(stat -c %a /usr/local/bin/entrypoint.sh)" = 755
-    /bin/sh -n /usr/local/bin/entrypoint.sh
+    bash -n /usr/local/bin/entrypoint.sh
   `)
   startHelp(1000, 1000)
   shell(`
@@ -99,11 +99,12 @@ try {
   containers.add(server)
   docker([
     'run', '--detach', '--rm', '--name', server, '--network', 'none', ...mounts(),
-    '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1', image,
+    '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1',
+    '-e', 'DSH_PUBLIC_URL=http://localhost:13080', image,
   ])
   const probe = `
     const response = await fetch('http://127.0.0.1:3080/');
-    if (![200, 401].includes(response.status)) throw new Error('Unexpected HTTP status: ' + response.status);
+    if (response.status !== 200) throw new Error('A fresh browser must reach the UI: ' + response.status);
   `
   const deadline = Date.now() + 45_000
   let ready = false
@@ -115,6 +116,8 @@ try {
     await setTimeout(300)
   }
   assert.ok(ready, 'web server must answer HTTP after ownership migration')
+  const startup = docker(['logs', server]).stdout + docker(['logs', server]).stderr
+  assert.match(startup, /dsh web: http:\/\/localhost:13080\/\?token=[A-Za-z0-9_-]+/, 'the startup log must print the browser-facing sign-in URL')
   const processOwner = docker(['exec', server, 'stat', '-c', '%u:%g', '/proc/1']).stdout.trim()
   assert.equal(processOwner, '1234:1235', 'web process must run under the new identity')
   const identity = docker(['exec', server, 'gosu', 'node', 'id']).stdout

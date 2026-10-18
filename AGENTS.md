@@ -2,13 +2,14 @@
 
 Instructions for AI coding agents that work on this repository. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md), which has the same rules with more detail.
 
-## This checkout is not ours
+## This checkout is our fork
 
-This working copy is a local fork of someone else's repository. We change its internals for ourselves; nothing goes back upstream.
+This working copy is our own fork of someone else's repository. All our work lives there; the upstream project is read-only for us.
 
-- Never `git push`. Never open a pull request, an issue or a comment on the remote. Nothing we do leaves this machine.
-- Do not write `Fixes #n`, `Refs #n` or any issue claim into a commit, a branch name or a note: there is no PR to link and the issue is not ours to touch.
-- The "Branches, pull requests and issues" section below describes the upstream project's workflow. For us it does not apply: work on local branches, commit locally, stop there.
+- Our fork is the `fork` remote (`NoahOsmonth/DeepSeek-Bot`). Push branches there and keep them synced. `origin` (`Fei2411/DeepSeek-Bot`) is the upstream project: fetch from it to stay current, never push to it.
+- Never open a pull request, an issue or a comment on the upstream project. Nothing we do goes back to it.
+- Do not write `Fixes #n`, `Refs #n` or any issue claim into a commit, a branch name or a note: the upstream issue is not ours to touch.
+- The "Branches, pull requests and issues" section below describes the upstream project's workflow. For us it does not apply: work on local branches, commit locally, push to `fork`.
 - Do not ask maintainers, do not triage their issues, do not propose changes upstream.
 
 ## What this project is
