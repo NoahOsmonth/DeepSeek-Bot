@@ -7,6 +7,15 @@ import { SPRING_POP, SPRING_SHAPE, spring, useLinger } from './motion.js'
 import { t } from './i18n.js'
 
 const MENU_EXIT_MS = 120
+// The host rebuilds the whole model list, provider by provider, for a fresh one, so a
+// menu opened again soon after asks no more often than the host's own cache expires.
+const REFRESH_MS = 10_000
+let refreshedAt = 0
+function refreshModels(actions) {
+  if (actions?.refreshModels === undefined || Date.now() - refreshedAt < REFRESH_MS) return
+  refreshedAt = Date.now()
+  void actions.refreshModels()
+}
 
 // -------------------------------------------------------------------------
 // A Bot's model: the picker in its details panel and settings, and the message its
@@ -149,8 +158,11 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
   const current = bot.model ?? bot.appliedModel
   const served = servedOf(roster, current)
   const reasoning = thinkingOf(served, current, actions)
+  // A pick shows at once; the team view carries the saved level a round trip later.
+  const [pending, setPending] = useState(null)
+  const chosenEffort = pending === null ? bot.effort : pending.effort
   // The level the Bot runs on: its pick when the model serves it, else the model's own.
-  const picked = reasoning?.efforts?.some(effort => effort.id === bot.effort) ? bot.effort : undefined
+  const picked = reasoning?.efforts?.some(effort => effort.id === chosenEffort) ? chosenEffort : undefined
   const currentEffort = picked ?? reasoning?.defaultEffort
   const effortLabel = currentEffort === undefined
     ? (reasoning?.efforts?.length > 0 ? t('Default') : undefined)
@@ -158,7 +170,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
   const toggle = () => {
     if (isOpen) { close(); return }
     // DSH settings can change the list at any time, so opening asks again.
-    void actions?.refreshModels?.()
+    refreshModels(actions)
     open()
   }
   const pick = (ref) => {
@@ -169,7 +181,12 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
   const pickEffort = (effort) => {
     close()
     if (onPickEffort) onPickEffort(effort)
-    else if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }))
+    else if (effort !== chosenEffort) {
+      setPending({ effort })
+      // A failed save shows in `run`; the label then falls back to the Bot's own level.
+      Promise.resolve(run(actions.updateBot(bot.id, { effort: effort ?? null })))
+        .finally(() => setPending(state => (state !== null && state.effort === effort ? null : state)))
+    }
   }
   const models = roster.models ?? []
   return h(Fragment, null,
@@ -200,19 +217,26 @@ export function ThinkingRow({ bot, roster, actions, run }) {
   const ref = bot.model ?? bot.appliedModel
   const reasoning = thinkingOf(servedOf(roster, ref), ref, actions)
   const efforts = reasoning?.efforts ?? []
-  const picked = efforts.find(effort => effort.id === bot.effort)
+  // A pick shows at once; the team view carries the saved level a round trip later.
+  const [pending, setPending] = useState(null)
+  const chosen = pending === null ? bot.effort : pending.effort
+  const picked = efforts.find(effort => effort.id === chosen)
   const fallback = efforts.find(effort => effort.id === reasoning?.defaultEffort)
   if (efforts.length === 0) return null
   const shown = picked ?? fallback
   const toggle = () => {
     if (isOpen) { close(); return }
     // DSH settings can change the list at any time, so opening asks again.
-    void actions?.refreshModels?.()
+    refreshModels(actions)
     open()
   }
   const pick = (effort) => {
     close()
-    if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }))
+    if (effort === chosen) return
+    setPending({ effort })
+    // A failed save shows in `run`; the label then falls back to the Bot's own level.
+    Promise.resolve(run(actions.updateBot(bot.id, { effort: effort ?? null })))
+      .finally(() => setPending(state => (state !== null && state.effort === effort ? null : state)))
   }
   return h(Fragment, null,
     h('div', { className: 'bt-set-row bt-bs-row' },

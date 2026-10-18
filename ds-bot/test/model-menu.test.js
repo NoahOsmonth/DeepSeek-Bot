@@ -276,3 +276,68 @@ test('a Bot without a model has no Thinking level row', () => {
   const view = render(() => ThinkingRow({ bot, roster: rosterWith(levels), actions: { updateBot: () => Promise.resolve() }, run: promise => promise }))
   assert.equal(view.tree, null)
 })
+
+// The row's label and the checked row of its open menu.
+function pendingRow() {
+  const updates = []
+  let finish
+  const bot = { id: 'chief', name: 'Chief', model: 'p/m', effort: 'high' }
+  const actions = {
+    updateBot: (id, patch) => { updates.push(patch.effort); return new Promise((resolve) => { finish = resolve }) },
+    refreshModels: () => Promise.resolve(),
+  }
+  const view = render(() => ThinkingRow({ bot, roster: rosterWith(levels), actions, run: promise => promise }))
+  const trigger = () => nodes(view.tree, node => node.props.className === 'bt-model-trigger')[0]
+  const label = () => nodes(trigger(), node => node.props.className === 'bt-model-name')[0].children[0]
+  const openAndPick = (name) => {
+    trigger().props.onClick()
+    menuButtons(view.rerender()).find(button => labelOf(button) === name).props.onClick()
+    view.rerender()
+  }
+  return { view, trigger, label, openAndPick, updates, bot, finish: () => finish() }
+}
+
+test('a picked level shows at once, before the host answers', async () => {
+  const row = pendingRow()
+  row.openAndPick('Low')
+  assert.equal(row.label(), 'Low')
+  assert.deepEqual(row.updates, ['low'])
+  // The team view catches up, then the pick settles on the Bot's own level.
+  row.bot.effort = 'low'
+  row.finish()
+  await tick()
+  row.view.rerender()
+  assert.equal(row.label(), 'Low')
+})
+
+test('a pick the host does not keep falls back to the level the Bot has', async () => {
+  const row = pendingRow()
+  row.openAndPick('Low')
+  row.finish()
+  await tick()
+  row.view.rerender()
+  assert.equal(row.label(), 'High')
+})
+
+test('a pick the row already shows sends nothing', () => {
+  const row = pendingRow()
+  row.openAndPick('Low')
+  row.openAndPick('Low')
+  assert.deepEqual(row.updates, ['low'])
+})
+
+test('a fresh model list is asked for once, not on every open', () => {
+  const calls = []
+  const bot = { id: 'chief', name: 'Chief', model: 'p/m', effort: 'high' }
+  const actions = { updateBot: () => Promise.resolve(), refreshModels: () => { calls.push(1); return Promise.resolve() } }
+  const view = render(() => ThinkingRow({ bot, roster: rosterWith(levels), actions, run: promise => promise }))
+  const trigger = () => nodes(view.tree, node => node.props.className === 'bt-model-trigger')[0]
+  trigger().props.onClick()
+  view.rerender()
+  const first = calls.length
+  trigger().props.onClick()
+  view.rerender()
+  trigger().props.onClick()
+  view.rerender()
+  assert.equal(calls.length, first)
+})

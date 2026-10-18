@@ -6791,6 +6791,13 @@ ${shown}`, { axis: "y", ...QUICK_EDGES });
 var import_react14 = require("react");
 var import_react_dom6 = require("react-dom");
 var MENU_EXIT_MS = 120;
+var REFRESH_MS = 1e4;
+var refreshedAt = 0;
+function refreshModels(actions) {
+  if (actions?.refreshModels === void 0 || Date.now() - refreshedAt < REFRESH_MS) return;
+  refreshedAt = Date.now();
+  void actions.refreshModels();
+}
 function groupModels(models) {
   const groups = /* @__PURE__ */ new Map();
   for (const model of models ?? []) {
@@ -6934,7 +6941,9 @@ function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onPickEffo
   const current = bot.model ?? bot.appliedModel;
   const served = servedOf(roster, current);
   const reasoning = thinkingOf(served, current, actions);
-  const picked = reasoning?.efforts?.some((effort) => effort.id === bot.effort) ? bot.effort : void 0;
+  const [pending, setPending] = (0, import_react14.useState)(null);
+  const chosenEffort = pending === null ? bot.effort : pending.effort;
+  const picked = reasoning?.efforts?.some((effort) => effort.id === chosenEffort) ? chosenEffort : void 0;
   const currentEffort = picked ?? reasoning?.defaultEffort;
   const effortLabel = currentEffort === void 0 ? reasoning?.efforts?.length > 0 ? t("Default") : void 0 : reasoning.efforts.find((effort) => effort.id === currentEffort)?.name ?? currentEffort;
   const toggle = () => {
@@ -6942,7 +6951,7 @@ function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onPickEffo
       close();
       return;
     }
-    void actions?.refreshModels?.();
+    refreshModels(actions);
     open();
   };
   const pick2 = (ref) => {
@@ -6953,7 +6962,10 @@ function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onPickEffo
   const pickEffort = (effort) => {
     close();
     if (onPickEffort) onPickEffort(effort);
-    else if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }));
+    else if (effort !== chosenEffort) {
+      setPending({ effort });
+      Promise.resolve(run(actions.updateBot(bot.id, { effort: effort ?? null }))).finally(() => setPending((state) => state !== null && state.effort === effort ? null : state));
+    }
   };
   const models = roster.models ?? [];
   return (0, import_react14.createElement)(
@@ -6998,7 +7010,9 @@ function ThinkingRow2({ bot, roster, actions, run }) {
   const ref = bot.model ?? bot.appliedModel;
   const reasoning = thinkingOf(servedOf(roster, ref), ref, actions);
   const efforts = reasoning?.efforts ?? [];
-  const picked = efforts.find((effort) => effort.id === bot.effort);
+  const [pending, setPending] = (0, import_react14.useState)(null);
+  const chosen = pending === null ? bot.effort : pending.effort;
+  const picked = efforts.find((effort) => effort.id === chosen);
   const fallback = efforts.find((effort) => effort.id === reasoning?.defaultEffort);
   if (efforts.length === 0) return null;
   const shown = picked ?? fallback;
@@ -7007,12 +7021,14 @@ function ThinkingRow2({ bot, roster, actions, run }) {
       close();
       return;
     }
-    void actions?.refreshModels?.();
+    refreshModels(actions);
     open();
   };
   const pick2 = (effort) => {
     close();
-    if (effort !== bot.effort) void run(actions.updateBot(bot.id, { effort: effort ?? null }));
+    if (effort === chosen) return;
+    setPending({ effort });
+    Promise.resolve(run(actions.updateBot(bot.id, { effort: effort ?? null }))).finally(() => setPending((state) => state !== null && state.effort === effort ? null : state));
   };
   return (0, import_react14.createElement)(
     import_react14.Fragment,
